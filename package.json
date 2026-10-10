@@ -1,0 +1,22 @@
+{
+  "name": "school-record-cloud",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/main.js && node --check src/sync.js && node --check src/remote.js && node --check scripts/build.mjs && node --check scripts/editor-transform.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.102.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "esbuild": "0.25.12"
+  }
+}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark"><title>생기부 작성 도우미</title><link rel="stylesheet" href="/assets/style.css"></head>
+<body>
+<main id="authView" class="auth-view">
+ <section class="auth-card">
+  <div class="brand-mark" aria-hidden="true">기록</div><p class="eyebrow">나의 수업, 학생의 성장</p><h1>생기부 작성 도우미</h1>
+  <p class="intro">학생 누가기록부터 문장 완성까지.<br>로그인한 계정으로 PC와 모바일에서 이어서 작성하세요.</p>
+  <p class="account-note">기존 todolist 계정이 있다면 같은 이메일·비밀번호로 로그인하세요.</p>
+  <form id="authForm">
+   <label for="email">이메일</label><input id="email" name="email" type="email" autocomplete="username" placeholder="teacher@example.com" required>
+   <label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+   <button id="loginBtn" class="primary full" type="submit">로그인</button>
+   <div class="auth-actions"><button id="signupBtn" type="button">회원가입</button><button id="resetBtn" type="button">비밀번호 재설정</button></div>
+  </form>
+  <p id="authMessage" role="status" class="message"></p>
+  <small>웹 ver3.00 · made by yoonsungho</small>
+ </section>
+</main>
+<section id="workspace" class="workspace" hidden>
+ <header class="cloud-bar">
+  <div class="cloud-brand">생기부 <span class="cloud-label">CLOUD</span></div>
+  <span id="syncState" class="sync-state" role="status" aria-live="polite">계정 확인 중…</span>
+  <span id="userEmail" class="user-email"></span>
+  <div class="cloud-actions"><button id="saveBtn" class="primary">지금 저장</button><button id="reloadBtn">서버 자료 새로 열기</button><button id="logoutBtn">로그아웃</button></div>
+ </header>
+ <p id="cloudNotice" class="cloud-notice" role="status" hidden></p>
+ <div id="editorHost" class="editor-host"><div class="loading">저장한 자료를 불러오는 중입니다…</div></div>
+</section>
+<dialog id="resolveDialog"><h2>다른 기기의 변경 사항이 있습니다</h2><p>현재 기기와 서버의 자료가 다릅니다. 자동 저장을 멈췄습니다. 필요한 자료를 백업한 뒤 사용할 자료를 선택하세요.</p><p id="resolveMessage" role="status"></p><div class="dialog-actions"><button id="downloadLocal">현재 기기 자료 백업</button><button id="useServer" class="primary">서버 자료 사용</button><button id="useLocal">현재 기기 자료로 서버 교체</button></div></dialog>
+<dialog id="passwordDialog"><h2>새 비밀번호 설정</h2><p>같은 Supabase 프로젝트를 사용하는 todolist의 비밀번호도 함께 변경됩니다.</p><form id="passwordForm"><label for="newPassword">새 비밀번호</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required><button class="primary full">비밀번호 변경</button><p id="passwordMessage" role="status"></p></form></dialog>
+<script type="module" src="/assets/main.js"></script>
+</body></html>
