@@ -1,4 +1,4 @@
-# 생기부 작성 도우미 · 웹 ver3.00
+# 생기부 작성 도우미 · 웹 ver3.01
 
 made by yoonsungho
 
@@ -29,10 +29,10 @@ todolist의 테이블과 데이터는 이 앱에서 사용하지 않습니다. �
 
 ## 3. GitHub에 올리기
 
-별도의 GitHub 저장소(예: `school-record-cloud`)를 만드는 방법을 권장합니다.
+별도의 GitHub 저장소(예: `school-record-assistant`)를 만드는 방법을 권장합니다.
 
 1. ZIP을 압축 해제합니다.
-2. `school-record-cloud` 폴더 **안의 내용**을 새 저장소 루트에 올립니다.
+2. `school-record-assistant` 폴더 **안의 내용**을 새 저장소 루트에 올립니다.
 3. 저장소 첫 화면에서 `package.json`, `package-lock.json`, `vercel.json`, `README.md`, `src`, `scripts`, `supabase`, `tests`가 보여야 합니다.
 4. Commit 합니다.
 
@@ -63,7 +63,7 @@ Supabase 프로젝트의 Connect 또는 Settings → API Keys에서 확인합니
 | Output Directory | `dist` |
 | Node.js | 22 이상 |
 
-6. **Deploy**를 누릅니다. 배포가 끝나면 Production 주소를 복사합니다. 예: `https://school-record-cloud.vercel.app`.
+6. **Deploy**를 누릅니다. 배포가 끝나면 Production 주소를 복사합니다. 예: `https://school-record-assistant.vercel.app`.
 
 환경변수를 나중에 수정했다면 **Redeploy**해야 적용됩니다. Preview 배포를 사용하려면 그 환경에도 두 변수를 설정하세요.
 
@@ -75,7 +75,7 @@ Supabase 프로젝트의 Connect 또는 Settings → API Keys에서 확인합니
 - **Redirect URLs:** 기존 목록을 유지하고 생기부 Production 주소를 아래처럼 **추가**합니다.
 
 ```text
-https://school-record-cloud.vercel.app/
+https://school-record-assistant.vercel.app/
 ```
 
 위 주소를 실제 배포 주소로 바꾸세요. 마지막 `/`까지 넣습니다. 앱은 이메일 인증·비밀번호 재설정 시 현재 사이트 주소를 명시적으로 전달합니다. 개발할 때만 아래 주소를 추가합니다.

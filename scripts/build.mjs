@@ -17,4 +17,5 @@ await mkdir(resolve(root,'dist/assets'),{recursive:true});
 await build({entryPoints:[resolve(root,'src/main.js')],bundle:true,minify:true,format:'esm',target:['es2022'],outfile:resolve(root,'dist/assets/main.js'),define:{__SUPABASE_URL__:JSON.stringify(url),__SUPABASE_KEY__:JSON.stringify(key),__EDITOR_HTML__:JSON.stringify(editor)},logLevel:'info'});
 await copyFile(resolve(root,'src/index.html'),resolve(root,'dist/index.html'));
 await copyFile(resolve(root,'src/style.css'),resolve(root,'dist/assets/style.css'));
+for(const file of ['icon.svg','apple-touch-icon.png','icon-192.png','icon-512.png','manifest.webmanifest']) await copyFile(resolve(root,'src',file),resolve(root,'dist',file));
 console.log('Build complete: dist');
