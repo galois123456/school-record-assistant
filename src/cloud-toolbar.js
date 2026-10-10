@@ -41,10 +41,10 @@ export function attachCloudToolbar(outer, inner) {
     if(state.textContent!==source.textContent)state.textContent=source.textContent;
     state.dataset.state=source.dataset.state||'';
     email.textContent=account.textContent;email.title=account.textContent;
-    for(const {source,button} of pairs){button.textContent=source.textContent;button.disabled=source.disabled;}
+    for(const {source,button} of pairs){button.textContent=source.textContent;button.disabled=source.disabled;button.setAttribute('aria-live','polite');if(source.hasAttribute('aria-busy'))button.setAttribute('aria-busy',source.getAttribute('aria-busy'));else button.removeAttribute('aria-busy');}
   }
   const observer=new outer.defaultView.MutationObserver(sync);
-  observer.observe(outer.querySelector('.cloud-bar'),{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','data-state']});
+  observer.observe(outer.querySelector('.cloud-bar'),{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','data-state','aria-busy']});
   sync();outer.getElementById('workspace').classList.add('cloud-toolbar-integrated');
   return ()=>{observer.disconnect();outer.getElementById('workspace').classList.remove('cloud-toolbar-integrated');stateBox.remove();email.remove();actions.remove();style.remove();};
 }

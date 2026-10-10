@@ -1,4 +1,5 @@
 import { attachCloudToolbar } from './cloud-toolbar.js';
+import { bindSaveFeedback } from './save-feedback.js';
 import { createClient } from '@supabase/supabase-js';
 import { WorkspaceSync, validatePayload } from './sync.js';
 import {createWorkspaceRemote} from './remote.js';
@@ -25,9 +26,9 @@ function status({state,detail,cacheError}){
  else notice();
  if(state==='conflict'&&!$('resolveDialog').open){$('resolveDialog').showModal();flushEditor();}
 }
-function flushEditor(){try{frame?.contentWindow?.cloudFlush?.();}catch(e){notice(explain(e));}}
+function flushEditor(strict=false){try{frame?.contentWindow?.cloudFlush?.();}catch(e){notice(explain(e));if(strict)throw e;}}
 function detachEditor(){detachCloudToolbar();detachCloudToolbar=()=>{};clearTimeout(readyTimer);frame?.remove();frame=null;window.__recordStorage=undefined;}
-function stop(){epoch++;flushEditor();engine?.close();engine=null;detachEditor();releaseLock?.();releaseLock=null;currentUser=null;loadingUser=null;for(const id of ['resolveDialog','passwordDialog'])if($(id).open)$(id).close();}
+function stop(){epoch++;resetSaveFeedback();flushEditor();engine?.close();engine=null;detachEditor();releaseLock?.();releaseLock=null;currentUser=null;loadingUser=null;for(const id of ['resolveDialog','passwordDialog'])if($(id).open)$(id).close();}
 function loading(text){$('editorHost').replaceChildren();const div=document.createElement('div');div.className='loading';div.textContent=text;$('editorHost').append(div);return div;}
 async function lock(uid){if(!navigator.locks)throw Error('이 브라우저에서는 안전한 탭 잠금을 사용할 수 없습니다. 최신 Chrome, Edge, Safari 또는 Firefox의 HTTPS 주소로 접속하세요.');let unlock;const held=new Promise(r=>unlock=r);return new Promise((resolve,reject)=>{navigator.locks.request(`school-record-cloud:${project}:${uid}`,{ifAvailable:true},async acquired=>{if(!acquired){resolve(null);return;}resolve(unlock);await held;}).catch(reject);});}
 function mountEditor(){
@@ -57,8 +58,8 @@ async function openAccount(user){
   }
   $('syncState').textContent='자료를 불러오지 못했습니다';}
 }
-async function saveNow(){flushEditor();if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush();}
-$('saveBtn').onclick=()=>saveNow().catch(e=>notice(explain(e)));
+async function saveNow(){flushEditor(true);if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush();}
+const resetSaveFeedback=bindSaveFeedback({button:$('saveBtn'),save:saveNow,hasPending:()=>!!engine?.dirty,onError:e=>notice(explain(e))});
 $('reloadBtn').onclick=async()=>{try{await saveNow();const user=currentUser;stop();await openAccount(user);}catch(e){notice(explain(e));}};
 $('logoutBtn').onclick=async()=>{
  $('logoutBtn').disabled=true;
@@ -71,7 +72,7 @@ $('logoutBtn').onclick=async()=>{
  finally{$('logoutBtn').disabled=false;}
 };
 function downloadJSON(payload,prefix){const d=new Date(),pad=n=>String(n).padStart(2,'0'),stamp=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`${prefix}_${stamp}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.06',exportedAt:new Date().toISOString(),...shell,apps};}
+function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.07',exportedAt:new Date().toISOString(),...shell,apps};}
 $('downloadLocal').onclick=()=>downloadJSON(localBackup(),'생기부_충돌자료백업');
 $('resolveDialog').addEventListener('cancel',e=>e.preventDefault());
 async function resolveConflict(useLocal){

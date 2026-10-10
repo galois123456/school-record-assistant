@@ -20,5 +20,5 @@ test('cloud transformed modules parse and share only account storage',()=>{
  for(const name of ['journal','integrated','macro','helper']){const m=cloud.match(new RegExp(name+":'([A-Za-z0-9+/=]+)'"));assert.ok(m,name);pages.push(Buffer.from(m[1],'base64').toString());}
  for(const [i,page] of pages.entries())for(const [j,m] of [...page.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].entries())new vm.Script(m[1],{filename:`editor-${i}-script-${j}`});
  for(const page of pages){const first=page.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i)[1];const shared={};const window={parent:{__recordStorage:shared}};vm.runInNewContext(first,{window});assert.equal(window.localStorage,shared);assert.equal(window.__recordStorage,shared);}
- assert.ok(cloud.includes('웹 ver3.06'));assert.ok(cloud.includes('parent.cloudEditorReady()'));
+ assert.ok(cloud.includes('웹 ver3.07'));assert.ok(cloud.includes('parent.cloudEditorReady()'));
 });
