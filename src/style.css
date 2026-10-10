@@ -3,3 +3,5 @@
 @media(min-width:761px){.cloud-toolbar-integrated>.cloud-bar{display:none}}
 
 :is(#reloadBtn,#logoutBtn){background:#eff6ff;color:#1d4ed8;border-color:#93c5fd}#saveBtn{background:#2563eb;color:white;border-color:#2563eb;font-weight:800}@media(prefers-color-scheme:dark){:is(#reloadBtn,#logoutBtn){background:#19365a;color:#bfdbfe;border-color:#477caf}#saveBtn{background:#1d4ed8;border-color:#60a5fa}}
+
+.sync-state[data-state=offline]{color:#b91c1c}@media(prefers-color-scheme:dark){.sync-state[data-state=offline]{color:#fda4af}}

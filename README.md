@@ -1,4 +1,4 @@
-# 생기부 작성 도우미 · 웹 ver3.07
+# 생기부 작성 도우미 · 웹 ver3.09
 
 made by yoonsungho
 
@@ -188,3 +188,11 @@ vercel.json                  Vercel 배포 설정
 - https://supabase.com/docs/guides/getting-started/api-keys
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://vercel.com/docs/project-configuration
+# ver3.09 암호화 백업
+
+전체 설정의 ‘🔒 통합 백업’에서 12자 이상의 별도 비밀번호를 두 번 입력한 뒤 ‘암호화 준비’ → ‘암호화 JSON 저장’을 누르세요. 복원에는 같은 비밀번호가 필요합니다. 분실한 비밀번호는 복구할 수 없습니다. 온라인 ver3.09와 오프라인 ver2.19는 같은 암호화 파일을 읽습니다. 기존 평문 JSON도 불러올 수 있습니다.
+
+삭제·초기화·복원 전 안전 백업과 온라인 복구용 JSON에도 적용됩니다. 백업 취소 시 관련 파괴적 작업도 중단합니다. 브라우저 자동 저장·서버 자료 자체나 CSV·Markdown·TXT는 이 기능으로 암호화되지 않습니다. 자세한 사용법·RLS와 관리자 권한의 한계는 **암호화백업_보안안내.md** 및 앱의 전체 설정·사용법을 확인하세요.
+
+기존 저장 상태 수정도 포함합니다. ‘지금 저장’ 글자는 유지하며 제목 옆에서 실제 서버 응답에 따른 진행·완료·연결 오류를 확인합니다. 변경 내용 없는 수동 저장도 서버 응답을 확인합니다. 기존 Supabase SQL과 환경변수는 변경하지 않습니다.
+

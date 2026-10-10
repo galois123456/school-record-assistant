@@ -1,3 +1,4 @@
+import './backup-crypto.js';
 import { attachCloudToolbar } from './cloud-toolbar.js';
 import { bindSaveFeedback } from './save-feedback.js';
 import { createClient } from '@supabase/supabase-js';
@@ -18,10 +19,12 @@ function message(text){$('authMessage').textContent=text;}
 if(authHash.get('error_description'))message(authHash.get('error_description'));
 
 function explain(error){if(error?.code==='42P01'||error?.code==='PGRST202')return 'Supabase SQL 설정이 필요합니다. supabase/schema.sql을 실행하세요.';const m=error?.message||'요청을 처리하지 못했습니다.';if(/Invalid login credentials/i.test(m))return '이메일 또는 비밀번호가 올바르지 않습니다.';if(/Email not confirmed/i.test(m))return '이메일의 인증 링크를 먼저 눌러 주세요.';if(/fetch|network/i.test(m))return '서버에 연결하지 못했습니다. 인터넷 연결과 Supabase 설정을 확인하세요.';return m;}
-function status({state,detail,cacheError}){
- const label={pending:'서버 저장 대기 중',saving:'서버 저장 중…',saved:'서버 저장 완료',error:'서버 저장 실패 · 재시도 필요',conflict:'기기 간 충돌 · 선택 필요'};
+function status({state,detail,cacheError,confirmedAt}){
+ const time=confirmedAt?new Date(confirmedAt).toLocaleTimeString('ko-KR',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'}):'';
+ const label={pending:'서버 저장 대기 중',saving:'서버 저장 중…',saved:'서버 저장 완료'+(time?' · '+time:''),offline:'연결 끊김 · 서버 저장 불가',error:'서버 저장 실패 · 재시도 필요',conflict:'기기 간 충돌 · 선택 필요'};
  $('syncState').textContent=label[state]||state;$('syncState').dataset.state=state;
  if(cacheError)notice('이 브라우저에 임시 자료를 보관하지 못했습니다. 서버 저장 완료를 확인하거나 통합 백업을 받으세요.');
+ else if(state==='offline')notice('인터넷 연결이 끊겨 서버에 저장할 수 없습니다. 이 기기에 보관한 변경 사항은 연결 후 저장됩니다.');
  else if(state==='error')notice(explain({message:detail})+' 현재 화면을 닫지 말고 다시 저장해 주세요.');
  else notice();
  if(state==='conflict'&&!$('resolveDialog').open){$('resolveDialog').showModal();flushEditor();}
@@ -48,7 +51,7 @@ async function openAccount(user){
   const row=await remote.read(user.id);if(ticket!==epoch)return;
   const cache=cacheFor(user.id);let pending;try{pending=cache.read();}catch(cause){throw Object.assign(Error('기기에 보관된 임시 자료를 읽지 못했습니다. 백업 후 기기 임시 자료만 비우고 다시 열 수 있습니다.'),{code:'LOCAL_DRAFT_INVALID'});}
   currentUser=user;loadingUser=null;
-  engine=new WorkspaceSync({remote:remoteFor(user.id),cache,revision:row.revision,payload:row.payload,pending,onState:status});
+  engine=new WorkspaceSync({remote:remoteFor(user.id),cache,revision:row.revision,payload:row.payload,pending,onState:status,isOnline:()=>navigator.onLine!==false});
   $('saveBtn').disabled=false;$('reloadBtn').disabled=false;
   if(engine.blocked){loading('기기 임시 자료와 서버 자료 중 사용할 자료를 선택하세요.');status({state:'conflict'});}else mountEditor();
  }catch(e){if(ticket!==epoch)return;loadingUser=null;currentUser=null;engine?.close();engine=null;detachEditor();releaseLock?.();releaseLock=null;const area=loading(explain(e));const retry=document.createElement('button');retry.className='primary';retry.textContent='다시 열기';retry.onclick=()=>openAccount(user);area.append(retry);
@@ -58,8 +61,8 @@ async function openAccount(user){
   }
   $('syncState').textContent='자료를 불러오지 못했습니다';}
 }
-async function saveNow(){flushEditor(true);if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush();}
-const resetSaveFeedback=bindSaveFeedback({button:$('saveBtn'),save:saveNow,hasPending:()=>!!engine?.dirty,onError:e=>notice(explain(e))});
+async function saveNow({force=false}={}){flushEditor(true);if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush({force});}
+const resetSaveFeedback=bindSaveFeedback({button:$('saveBtn'),save:()=>saveNow({force:true}),onError:e=>status({state:engine?.blocked?'conflict':navigator.onLine===false?'offline':'error',detail:explain(e),cacheError:engine?.cacheError})});
 $('reloadBtn').onclick=async()=>{try{await saveNow();const user=currentUser;stop();await openAccount(user);}catch(e){notice(explain(e));}};
 $('logoutBtn').onclick=async()=>{
  $('logoutBtn').disabled=true;
@@ -71,8 +74,8 @@ $('logoutBtn').onclick=async()=>{
  }catch(e){notice('로그아웃을 완료하지 못했습니다. '+explain(e));if(!engine){const {data}=await supabase.auth.getSession();if(data.session)await openAccount(data.session.user);}}
  finally{$('logoutBtn').disabled=false;}
 };
-function downloadJSON(payload,prefix){const d=new Date(),pad=n=>String(n).padStart(2,'0'),stamp=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`${prefix}_${stamp}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
-function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.07',exportedAt:new Date().toISOString(),...shell,apps};}
+async function downloadJSON(payload,prefix){const d=new Date(),pad=n=>String(n).padStart(2,'0'),stamp=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;return window.RecordBackup.download(payload,prefix+'_'+stamp+'.json');}
+function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.09',exportedAt:new Date().toISOString(),...shell,apps};}
 $('downloadLocal').onclick=()=>downloadJSON(localBackup(),'생기부_충돌자료백업');
 $('resolveDialog').addEventListener('cancel',e=>e.preventDefault());
 async function resolveConflict(useLocal){
@@ -83,7 +86,7 @@ async function resolveConflict(useLocal){
   const row=await remote.read(currentUser.id);
   if(engine!==old)return;
   if(useLocal){old.paused=false;await old.replaceRemote(row.revision);if(old.dirty)await old.flush();$('resolveDialog').close();if(!frame)mountEditor();}
-  else {old.close();detachEditor();const cache=cacheFor(currentUser.id);cache.remove();engine=new WorkspaceSync({remote:remoteFor(currentUser.id),cache,revision:row.revision,payload:row.payload,onState:status});$('resolveDialog').close();mountEditor();}
+  else {old.close();detachEditor();const cache=cacheFor(currentUser.id);cache.remove();engine=new WorkspaceSync({remote:remoteFor(currentUser.id),cache,revision:row.revision,payload:row.payload,onState:status,isOnline:()=>navigator.onLine!==false});$('resolveDialog').close();mountEditor();}
  }catch(e){$('resolveMessage').textContent=explain(e);}
  finally{buttons.forEach(b=>b.disabled=false);}
 }
@@ -117,8 +120,8 @@ supabase.auth.onAuthStateChange((event,session)=>{
   openAccount(session.user);
  },0);
 });
-window.addEventListener('online',()=>{if(engine&&!engine.blocked)saveNow().catch(()=>{});});
-window.addEventListener('offline',()=>notice('인터넷 연결이 끊겼습니다. 현재 열린 화면에서는 계속 작성할 수 있습니다. 연결 후 서버 저장 완료를 확인하세요.'));
+window.addEventListener('online',()=>{if(engine&&!engine.blocked)saveNow({force:true}).catch(()=>{});});
+window.addEventListener('offline',()=>{if(engine)engine.connectionLost();else notice('인터넷 연결이 끊겼습니다. 연결 후 다시 시도하세요.');});
 window.addEventListener('beforeunload',e=>{flushEditor();if(engine?.dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{flushEditor();if(engine?.dirty)engine.persist();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushEditor();engine?.flush().catch(()=>{});}else if(engine&&!engine.blocked)saveNow().catch(()=>{});});

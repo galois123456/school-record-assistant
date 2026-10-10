@@ -12,7 +12,7 @@ export function attachCloudToolbar(outer, inner) {
     .desktop-cloud-status b{font-size:10px;letter-spacing:1px;color:#2563eb}
     .desktop-cloud-status span{color:#15803d}
     .desktop-cloud-status span[data-state=pending],.desktop-cloud-status span[data-state=saving]{color:#a16207}
-    .desktop-cloud-status span[data-state=error],.desktop-cloud-status span[data-state=conflict]{color:#b91c1c}
+    .desktop-cloud-status span[data-state=offline],.desktop-cloud-status span[data-state=error],.desktop-cloud-status span[data-state=conflict]{color:#b91c1c}
     .desktop-cloud-email{display:block;max-width:210px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#64748b;margin-right:5px}
     .desktop-cloud-actions{display:inline-flex;gap:4px;align-items:center}
     .shell-actions{align-items:center;flex-wrap:wrap;max-width:100%}
@@ -21,7 +21,7 @@ export function attachCloudToolbar(outer, inner) {
     html[data-theme=dark] .desktop-cloud-status b{color:#60a5fa}
     html[data-theme=dark] .desktop-cloud-status span{color:#9bcdb1}
     html[data-theme=dark] .desktop-cloud-status span[data-state=pending],html[data-theme=dark] .desktop-cloud-status span[data-state=saving]{color:#fcd34d}
-    html[data-theme=dark] .desktop-cloud-status span[data-state=error],html[data-theme=dark] .desktop-cloud-status span[data-state=conflict]{color:#fda4af}
+    html[data-theme=dark] .desktop-cloud-status span[data-state=offline],html[data-theme=dark] .desktop-cloud-status span[data-state=error],html[data-theme=dark] .desktop-cloud-status span[data-state=conflict]{color:#fda4af}
   }
   @media(min-width:761px) and (max-width:1450px){.switchbar .shell-actions{flex-basis:100%;justify-content:flex-end;margin-left:0}.switchbar .tabs{margin-left:auto}}
   `;

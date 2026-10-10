@@ -45,3 +45,34 @@ test('pending changes restore after refresh at same server revision',async()=>{
 test('quota failure stays visible while server save still works',async()=>{
  const r=backend(),c={write(){throw Error('quota');},remove(){}},e=make(r,{cache:c});e.start();e.storage.setItem(key,'{"value":4}');assert.equal(e.cacheError,true);await e.flush();assert.equal(e.dirty,false);assert.equal(e.cacheError,false);e.close();
 });
+
+test('manual save of unchanged data waits for actual server response',async()=>{
+ const r=backend();let done;const original=r.save.bind(r),states=[];
+ r.save=(p,rev)=>new Promise(resolve=>done=async()=>resolve(await original(p,rev)));
+ const e=make(r,{onState:s=>states.push(s)});e.start();states.length=0;
+ const pending=e.flush({force:true});assert.equal(states.at(-1).state,'saving');assert.equal(e.confirmedAt,null);
+ await done();await pending;assert.equal(r.calls,1);assert.equal(states.at(-1).state,'saved');assert.ok(states.at(-1).confirmedAt);e.close();
+});
+test('unchanged data cannot report manual save success while offline',async()=>{
+ const r=backend(),states=[];let online=true;const e=make(r,{isOnline:()=>online,onState:s=>states.push(s)});e.start();online=false;e.connectionLost();
+ await assert.rejects(e.flush({force:true}),/인터넷 연결/);assert.equal(r.calls,0);assert.equal(states.at(-1).state,'offline');assert.equal(e.dirty,false);e.close();
+});
+test('network failure is reported even when browser reports online and data is unchanged',async()=>{
+ const r=backend(),states=[];r.save=async()=>{r.calls++;throw Error('Failed to fetch');};const e=make(r,{onState:s=>states.push(s)});e.start();
+ await assert.rejects(e.flush({force:true}),/fetch/);assert.equal(r.calls,1);assert.equal(states.at(-1).state,'error');
+ await e.flush();assert.equal(states.at(-1).state,'error','passive no-op cannot pretend to confirm server state');e.close();
+});
+test('offline edits remain cached and reconnect sends and confirms them',async()=>{
+ const r=backend(),states=[];let online=false;const e=make(r,{isOnline:()=>online,onState:s=>states.push(s)});e.start();e.storage.setItem(key,'{"value":42}');
+ assert.equal(states.at(-1).state,'offline');assert.equal(e.cache.value.payload.storage[key],'{"value":42}');
+ await assert.rejects(e.flush({force:true}));online=true;await e.flush({force:true});assert.equal(r.data.storage[key],'{"value":42}');assert.equal(states.at(-1).state,'saved');assert.equal(e.cache.value,null);e.close();
+});
+test('disconnect during an in-flight request does not replace offline indicator with success',async()=>{
+ const r=backend(),states=[];let online=true,done;const original=r.save.bind(r);r.save=(p,rev)=>new Promise(resolve=>done=async()=>resolve(await original(p,rev)));
+ const e=make(r,{isOnline:()=>online,onState:s=>states.push(s)});e.start();const pending=e.flush({force:true});online=false;e.connectionLost();await done();await pending;
+ assert.equal(states.at(-1).state,'offline');e.close();
+});
+test('forced verification preserves revision conflict protection',async()=>{
+ const r=backend(),e=make(r);e.start();r.revision++;r.data=payload('another device');
+ await assert.rejects(e.flush({force:true}),/conflict/);assert.equal(e.blocked,true);assert.equal(r.data.storage[key],payload('another device').storage[key]);e.close();
+});
