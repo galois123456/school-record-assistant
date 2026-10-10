@@ -1,4 +1,4 @@
-# 생기부 작성 도우미 · 웹 ver3.05
+# 생기부 작성 도우미 · 웹 ver3.06
 
 made by yoonsungho
 

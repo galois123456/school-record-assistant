@@ -1,4 +1,4 @@
-생기부 작성 도우미 웹 ver3.05 · 빠른 배포 순서
+생기부 작성 도우미 웹 ver3.06 · 빠른 배포 순서
 
 1. 기존 todolist의 Supabase 프로젝트를 엽니다.
 2. SQL Editor에서 supabase/schema.sql 전체를 실행합니다.
