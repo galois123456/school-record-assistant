@@ -1,0 +1,84 @@
+/* All overrides are restricted to mobile widths; desktop styles are unchanged. */
+@media(max-width:760px){
+ .mobile311-row{display:flex!important;align-items:center;gap:4px!important;width:100%;min-width:0;flex:0 0 100%;box-sizing:border-box}
+ .mobile311-row>.btn,.mobile311-row .student-navigation .btn{font-size:11px!important;line-height:1.3;min-height:32px!important;padding:5px 6px!important;white-space:nowrap;flex:0 0 auto;width:auto!important}
+ .mobile311-row .field{min-width:0!important;margin:0!important}
+ /* Student journal: identity and commands share a single line. */
+ html[data-app=journal] .j-layout>.j-panel:last-child>.panel-head{flex-wrap:nowrap!important;gap:3px;padding:6px!important}
+ html[data-app=journal] .student-heading-main{display:contents!important}
+ html[data-app=journal] .panel-head #selectedName{flex:1 1 auto!important;font-size:13px!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;margin:0}
+ html[data-app=journal] .j-layout>.j-panel:last-child>.panel-head>.grow{display:none}
+ html[data-app=journal] .j-layout>.j-panel:last-child>.panel-head .j-btn{flex:0 0 auto;font-size:10px!important;min-height:30px!important;padding:4px 5px!important;white-space:nowrap}
+ html[data-app=journal] .stamp-cards{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px}
+ html[data-app=journal] .stamp-card{padding:5px 8px!important;min-width:0}
+ html[data-app=journal] .stamp-card>strong{font-size:12px;line-height:1.3}
+ html[data-app=journal] .stamp-counter{margin-top:2px;gap:4px}
+ html[data-app=journal] .stamp-counter output{font-size:19px;line-height:1.2}
+ html[data-app=journal] .stamp-counter button{min-height:28px!important;height:28px;min-width:30px;padding:1px 6px!important;font-size:17px}
+ html[data-app=journal] .record-filters{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px!important;align-items:end}
+ html[data-app=journal] .record-filters>label{min-width:0;width:auto!important;margin:0;display:flex;flex-direction:column;gap:3px;font-size:11px}
+ html[data-app=journal] .record-filters>label:first-child{grid-column:1/3;grid-row:1}
+ html[data-app=journal] #filterToday{grid-column:3;grid-row:1}
+ html[data-app=journal] #clearPeriod{grid-column:4;grid-row:1}
+ html[data-app=journal] .record-filters>label:nth-child(2){grid-column:1/3;grid-row:2}
+ html[data-app=journal] .record-filters>label:nth-child(3){grid-column:3/5;grid-row:2}
+ html[data-app=journal] .record-filters :is(input,select){width:100%!important;min-width:0!important;max-width:100%;min-height:34px!important;box-sizing:border-box}
+ html[data-app=journal] .record-filters>.j-btn{width:100%;font-size:11px;padding:4px!important;min-height:34px!important;white-space:nowrap}
+ html[data-app=journal] #recordSearch{grid-column:1/-1;grid-row:3}
+ /* Integrated activities: two command rows, compact student cards. */
+ html[data-app=integrated] .combined-toolbar{flex-wrap:wrap!important}
+ html[data-app=integrated] .combined-toolbar>.size-action-group{display:none}
+ html[data-app=integrated] .mobile311-main{order:-3}
+ html[data-app=integrated] .mobile311-secondary{order:-2}
+ html[data-app=integrated] .mobile311-main>.btn{flex:1 1 auto;min-width:0!important;font-size:10px!important;padding:5px 3px!important}
+ html[data-app=integrated] .mobile311-secondary>.btn:last-child{margin-left:auto}
+ html[data-app=integrated] #studentBody tr{grid-template-columns:repeat(12,minmax(0,1fr));--title-row:2;--text-row:3;--foot-row:4;gap:0;padding:4px}
+ html[data-app=integrated] #studentBody tr.student-start{--title-row:3;--text-row:4;--foot-row:5}
+ html[data-app=integrated] #studentBody tr:not(.student-start)::before{grid-row:1}
+ html[data-app=integrated] #studentBody td{padding:3px!important}
+ html[data-app=integrated] #studentBody .mobile-select{grid-column:1;grid-row:1;align-self:center}
+ html[data-app=integrated] #studentBody .mobile-select::after,html[data-app=integrated] #studentBody .mobile-number::before,html[data-app=integrated] #studentBody .mobile-name::before{content:none}
+ html[data-app=integrated] #studentBody .mobile-number{grid-column:2/6;grid-row:1;align-self:center}
+ html[data-app=integrated] #studentBody .mobile-name,html[data-app=integrated] #studentBody .mobile-name>.student-meta{display:contents!important}
+ html[data-app=integrated] #studentBody .student-name{grid-column:6/-1;grid-row:1;align-self:center}
+ html[data-app=integrated] #studentBody :is(.student-number,.student-name){font-size:14px!important;padding:3px!important;min-height:28px}
+ html[data-app=integrated] #studentBody .done-line{grid-column:8/-1;grid-row:2;justify-self:end;margin:0;display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap}
+ html[data-app=integrated] #studentBody .student-status-note{grid-column:1/8;grid-row:2;align-self:center;font-size:10px;margin:0}
+ html[data-app=integrated] #studentBody :is(.student-check,.done-check,.activity-done-check){width:18px!important;height:18px!important;min-height:0;margin:0}
+ html[data-app=integrated] #studentBody .mobile-title{grid-column:1/-1;grid-row:var(--title-row);margin-top:3px;padding-top:5px!important}
+ html[data-app=integrated] #studentBody .activity-label{display:block;padding:0}
+ html[data-app=integrated] #studentBody .activity-title-wrap{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center;gap:5px}
+ html[data-app=integrated] #studentBody .activity-title-wrap>span{min-width:0;flex:1;text-align:left;font-size:13px;overflow-wrap:anywhere}
+ html[data-app=integrated] #studentBody .activity-done-line{flex:0 0 auto;display:flex;align-items:center;gap:4px;margin:0;font-size:11px;white-space:nowrap}
+ html[data-app=integrated] #studentBody .mobile-text{grid-column:1/-1;grid-row:var(--text-row)}
+ html[data-app=integrated] #studentBody .mobile-bytes{grid-column:1/4;grid-row:var(--foot-row);align-self:center}
+ html[data-app=integrated] #studentBody .mobile-status{grid-column:4/7;grid-row:var(--foot-row);align-self:center}
+ html[data-app=integrated] #studentBody .mobile-actions{grid-column:7/-1;grid-row:var(--foot-row);align-self:center}
+ html[data-app=integrated] #studentBody .byte-main{font-size:11px;line-height:1.4;white-space:normal}
+ html[data-app=integrated] #studentBody .byte-sub{font-size:9px;line-height:1.3;margin:0}
+ html[data-app=integrated] #studentBody tr:not(.merged-row) .byte-sub{display:none}
+ html[data-app=integrated] #studentBody .badge{font-size:10px;padding:3px 5px;white-space:normal}
+ html[data-app=integrated] #studentBody .mobile-actions .tool-buttons{flex-direction:row!important;flex-wrap:nowrap!important;justify-content:flex-end;gap:3px}
+ html[data-app=integrated] #studentBody .mini-btn{font-size:10px!important;padding:4px!important;min-height:28px!important;white-space:nowrap}
+ /* Macro filters and final editing actions. */
+ html[data-app=macro] .tools .filters .mobile311-search>.field{flex:1 1 0!important;width:0}
+ html[data-app=macro] .tools .filters .mobile311-search>.field>label{display:none}
+ html[data-app=macro] .tools .filters .mobile311-search input{width:100%!important;padding:5px!important}
+ html[data-app=macro] .mobile311-search>.btn{font-size:10px!important;padding:4px!important}
+ html[data-app=macro] .tools .filters .mobile311-filter>.field{flex:1 1 0!important;width:0;display:flex;flex-direction:row;align-items:center;gap:4px}
+ html[data-app=macro] .mobile311-filter .field>label{font-size:11px;white-space:nowrap;margin:0}
+ html[data-app=macro] .tools .filters .mobile311-filter select{flex:1!important;width:0!important}
+ html[data-app=macro] .out-col .scroll>.row:last-child{flex-wrap:nowrap!important;gap:3px!important}
+ html[data-app=macro] .out-col .scroll>.row:last-child>.btn{display:inline-flex;align-items:center;justify-content:center;gap:2px;min-width:0;flex:1 1 auto;font-size:11px!important;padding:5px 4px!important;min-height:32px!important;white-space:nowrap;margin:0}
+ html[data-app=macro] #done{width:16px!important;height:16px;margin:0}
+ /* Helper: category / view commands / selected-student navigation. */
+ html[data-app=helper] .mobile311-category{order:-3}
+ html[data-app=helper] .mobile311-views{order:-2}
+ html[data-app=helper] .mobile311-category .category-set-picker{flex:1 1 0!important;width:0;gap:5px;margin:0;white-space:nowrap}
+ html[data-app=helper] .mobile311-category select{flex:1;width:0!important;max-width:none}
+ html[data-app=helper] .toolbar>.size-action-group{display:none}
+ html[data-app=helper] .mobile311-views>.btn{flex:1 1 auto;min-width:0;font-size:10px!important;padding:5px 3px!important}
+ html[data-app=helper] .mobile311-selection{justify-content:flex-end}
+ html[data-app=helper] .mobile311-selection>label{display:flex;align-items:center;gap:4px;flex:1 1 auto!important;margin:0;font-size:12px;white-space:nowrap}
+ html[data-app=helper] .mobile311-selection .student-navigation{display:flex;margin-left:0;gap:3px}
+}

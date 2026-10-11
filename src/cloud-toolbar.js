@@ -36,6 +36,20 @@ export function attachCloudToolbar(outer, inner) {
     button.type='button';button.id='desktop-'+id;button.className='shell-btn'+(id==='saveBtn'?' primary':'');
     button.onclick=()=>source.click();actions.append(button);return {source,button};
   });
+  // Mobile actions live next to the existing cloud controls. Keep their source
+  // buttons in the editor so desktop layout and every click handler stay intact.
+  const mobileGroup=outer.createElement('span');mobileGroup.className='mobile-shell-actions';
+  const mobilePairs=['rosterManager','themeToggle','globalSettingsBtn'].map(id=>{
+    const source=inner.getElementById(id),button=outer.createElement('button');
+    button.type='button';button.id='mobile-'+id;button.onclick=()=>source.click();mobileGroup.append(button);return {source,button,id};
+  });
+  outer.querySelector('.cloud-actions').prepend(mobileGroup);
+  inner.documentElement.classList.add('cloud-mobile-actions-integrated');
+  const mobileStyle=inner.createElement('style');mobileStyle.textContent='@media(max-width:760px){html.cloud-mobile-actions-integrated .switchbar>.shell-actions{display:none!important}}';inner.head.append(mobileStyle);
+  function syncMobile(){for(const {source,button,id} of mobilePairs){const label=source.textContent;button.textContent=id==='themeToggle'?(inner.documentElement.dataset.theme==='dark'?'☀':'☾'):label;button.title=source.title||label;button.setAttribute('aria-label',source.title||label);button.disabled=source.disabled;if(id==='themeToggle')button.setAttribute('aria-pressed',source.getAttribute('aria-pressed')||'false');}}
+  const mobileObserver=new inner.defaultView.MutationObserver(syncMobile);
+  for(const {source} of mobilePairs)mobileObserver.observe(source,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','title','aria-pressed']});
+  syncMobile();
   function sync(){
     const source=outer.getElementById('syncState'),account=outer.getElementById('userEmail');
     if(state.textContent!==source.textContent)state.textContent=source.textContent;
@@ -46,5 +60,5 @@ export function attachCloudToolbar(outer, inner) {
   const observer=new outer.defaultView.MutationObserver(sync);
   observer.observe(outer.querySelector('.cloud-bar'),{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','data-state','aria-busy']});
   sync();outer.getElementById('workspace').classList.add('cloud-toolbar-integrated');
-  return ()=>{observer.disconnect();outer.getElementById('workspace').classList.remove('cloud-toolbar-integrated');stateBox.remove();email.remove();actions.remove();style.remove();};
+  return ()=>{observer.disconnect();mobileObserver.disconnect();mobileGroup.remove();mobileStyle.remove();inner.documentElement.classList.remove('cloud-mobile-actions-integrated');outer.getElementById('workspace').classList.remove('cloud-toolbar-integrated');stateBox.remove();email.remove();actions.remove();style.remove();};
 }
