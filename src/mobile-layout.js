@@ -12,12 +12,13 @@
   if(app==='integrated'){
    const bar=q('.combined-toolbar');
    const first=row(bar,[by('activityManageBtn'),by('toggleAllMergedBtn'),by('bulkMergeBtn')],'mobile311-main');
-   const second=row(bar,[q('.byte-settings-trigger'),by('inputSizeTrigger'),bar.querySelector('.export-green')],'mobile311-secondary');
+   const second=row(bar,[q('.byte-settings-trigger'),by('inputSizeTrigger'),by('selectedOnly').closest('label'),bar.querySelector('.export-green')],'mobile311-secondary');
    bar.prepend(first,second);
   }else if(app==='macro'){
    const bar=q('.tools'),filters=q('.filters');
+   const heading=row(bar,[q('.project-picker'),by('selectedOnly').closest('label')],'mobile312-project');bar.prepend(heading);
    const first=row(filters,[by('search').closest('.field'),by('studentMode'),by('variableMode'),bar.querySelector('.export-green')],'mobile311-search');
-   const second=row(filters,[by('status').closest('.field'),by('missing').closest('.field')],'mobile311-filter');
+   const second=row(filters,[by('status').closest('.field'),by('missing').closest('.field'),q('.student-navigation')],'mobile311-filter');
    // Keep the hidden class-filter field first; rows follow in mobile order.
   }else if(app==='helper'){
    const bar=q('.toolbar'),filters=q('.filters');

@@ -1,0 +1,51 @@
+/* Phone refinements only. Desktop and saved editor heights are preserved. */
+@media(max-width:760px){
+ html[data-app=macro] .mobile312-project{flex-wrap:nowrap!important}
+ html[data-app=macro] .mobile312-project .project-picker{flex:1 1 0!important;width:0;min-width:0;gap:4px;font-size:11px;white-space:nowrap}
+ html[data-app=macro] .mobile312-project .project-picker select{flex:1 1 0;width:0!important;min-width:0!important;max-width:100%;padding:5px 3px!important;font-size:13px!important}
+ html[data-app=macro] .mobile312-project .selected-only-filter{flex:0 0 auto!important;white-space:nowrap;font-size:10px!important;gap:3px!important;margin:0!important}
+ html[data-app=macro] .mobile312-project input[type=checkbox]{width:16px!important;height:16px!important;min-height:0;margin:0}
+ html[data-app=macro] .tools .filters .mobile311-filter{gap:4px!important;flex-wrap:nowrap!important}
+ html[data-app=macro] .tools .filters .mobile311-filter>.field{flex:1 1 0!important;gap:3px!important;min-width:0!important}
+ html[data-app=macro] .mobile311-filter .field>label{font-size:10px!important}
+ html[data-app=macro] .tools .filters .mobile311-filter select{min-width:0!important;width:0!important;padding:4px 2px!important;font-size:13px!important;height:32px!important;min-height:32px!important}
+ html[data-app=macro] .mobile311-filter .student-navigation{flex:0 0 auto;margin:0;gap:3px}
+ html[data-app=macro] .mobile311-filter .student-navigation .btn{min-width:26px!important;width:26px!important;padding:3px!important;height:30px;min-height:30px!important}
+ /* Fit the selected-student filter immediately before export. */
+ html[data-app=integrated] .mobile311-secondary{gap:3px!important;flex-wrap:nowrap!important}
+ html[data-app=integrated] .mobile311-secondary>.btn{font-size:10px!important;padding:5px 3px!important;min-width:0;flex-shrink:1!important}
+ html[data-app=integrated] .mobile311-secondary>.selected-only-filter{display:flex;align-items:center;gap:2px!important;flex:0 0 auto!important;font-size:9px!important;white-space:nowrap;margin:0 0 0 auto!important}
+ html[data-app=integrated] .mobile311-secondary>.selected-only-filter input{width:14px!important;height:14px!important;min-height:0;margin:0}
+ html[data-app=integrated] .mobile311-secondary>.btn:last-child{margin-left:0;font-size:10px!important}
+ /* Remove legacy desktop cell height and paint the whole card continuously. */
+ html[data-app=integrated] #studentBody tr{height:auto!important;min-height:0!important;align-content:start;grid-auto-rows:min-content;margin:5px 0;padding:3px;background:#fff}
+ html[data-app=integrated] #studentBody tr.student-start{margin-top:8px}
+ html[data-app=integrated] #studentBody tr.merged-row{background:#fbf9ff}
+ html[data-app=integrated] #studentBody tr.row-active,html[data-app=integrated] #studentBody tr:hover{background:#f8fbff}
+ html[data-app=integrated] #studentBody tr.duplicate-row{background:#fff8f8}
+ html[data-app=integrated] #studentBody tr>td{background:transparent!important;height:auto!important;min-height:0!important;padding:2px 3px!important}
+ html[data-app=integrated] #studentBody :is(.activity-label,.byte-box,.student-meta){min-height:0!important;height:auto;gap:0}
+ html[data-app=integrated] #studentBody .activity-label{line-height:1.4}
+ html[data-app=integrated] #studentBody .mobile-title{margin-top:1px;padding-top:3px!important;padding-bottom:3px!important}
+ html[data-app=integrated] #studentBody .record-text{display:block;margin:0!important}
+ html[data-app=integrated] #studentBody .mobile-number{grid-column:2/4}
+ html[data-app=integrated] #studentBody .student-name{grid-column:4/-1}
+ html[data-app=integrated] #studentBody :is(.student-number,.student-name){font-size:12px!important;font-weight:750!important;color:var(--muted)!important;line-height:20px!important;min-height:24px!important;height:24px!important;padding:1px 3px!important}
+ html[data-app=integrated] #studentBody .mobile-select{padding:2px 3px!important;line-height:20px}
+ html[data-app=integrated] #studentBody :is(.done-line,.activity-done-line){font-size:12px!important;line-height:20px!important;font-weight:800;gap:4px!important;height:24px;min-height:0;align-items:center;margin:0}
+ html[data-app=integrated] #studentBody .done-line{margin-right:3px}
+ html[data-app=integrated] #studentBody :is(.done-check,.activity-done-check){width:18px!important;height:18px!important;vertical-align:middle;flex:0 0 18px;margin:0}
+ html[data-app=integrated] #studentBody .student-status-note{padding-left:3px;line-height:20px}
+ html[data-app=integrated] #studentBody :is(.mobile-bytes,.mobile-status,.mobile-actions){align-self:stretch;display:flex;align-items:center;min-height:32px!important}
+ html[data-app=integrated] #studentBody .mobile-actions{justify-content:flex-end}
+ html[data-app=integrated] #studentBody .byte-box{padding:0;margin:0}
+ html[data-app=integrated] #studentBody tr:not(.student-start)::before{padding:3px 6px;line-height:20px}
+ html[data-theme=dark][data-app=integrated] #studentBody tr{background:#132137}
+ html[data-theme=dark][data-app=integrated] #studentBody tr.merged-row{background:#21233f}
+ html[data-theme=dark][data-app=integrated] #studentBody tr:hover,html[data-theme=dark][data-app=integrated] #studentBody tr.row-active{background:#1c3451}
+ /* iOS date controls must shrink inside their two grid columns. */
+ html[data-app=journal] .record-filters>label:nth-child(2),html[data-app=journal] .record-filters>label:nth-child(3){width:100%!important;min-width:0!important;align-items:stretch;overflow:hidden;box-sizing:border-box}
+ html[data-app=journal] .record-filters :is(#dateFrom,#dateTo){display:block;-webkit-appearance:none;appearance:none;box-sizing:border-box;width:100%!important;min-width:0!important;max-width:100%!important;height:36px!important;min-height:36px!important;margin:0!important;padding:5px 6px!important;font-size:16px!important;line-height:24px;border-radius:7px;text-align:left}
+ html[data-app=journal] .record-filters input[type=date]::-webkit-date-and-time-value{min-width:0;text-align:left;margin:0}
+ html[data-app=journal] .record-filters input[type=date]::-webkit-datetime-edit{min-width:0;padding:0}
+}
