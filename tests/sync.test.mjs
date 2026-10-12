@@ -78,3 +78,27 @@ test('forced verification preserves revision conflict protection',async()=>{
 });
 
 test('assessment scores survive isolated account storage roundtrip',()=>{const key='school-record-assessment-v1';const value=JSON.stringify({version:2,classes:[{id:'class-a',data:{students:[{id:'student-a',scores:{idone:'25'}}]}}]});const storage=new AccountStorage(emptyPayload(),()=>{});storage.setItem(key,value);const restored=new AccountStorage(validatePayload(storage.snapshot()),()=>{});assert.equal(restored.getItem(key),value);storage.close();restored.close();});
+
+
+test('automatic failures back off, stop after three retries and preserve latest edits',async()=>{
+ const r=backend(),original=r.save.bind(r);r.save=async()=>{r.calls++;throw Error('temporary network failure');};
+ const e=make(r);e.schedule=()=>{};e.start();e.storage.setItem(key,'{"value":20}');
+ for(let i=0;i<4;i++){e.nextAutoAt=0;await assert.rejects(e.flush({automatic:true}));assert.ok(e.nextAutoAt>Date.now()+9000);}
+ assert.equal(r.calls,4);assert.equal(e.autoStopped,true);e.nextAutoAt=0;
+ e.storage.setItem(key,'{"value":21}');await e.flush({automatic:true});assert.equal(r.calls,4);assert.equal(e.cache.value.payload.storage[key],'{"value":21}');
+ r.save=original;await e.flush({force:true});assert.equal(e.dirty,false);assert.equal(e.autoStopped,false);e.close();
+});
+test('invalid SQL payload errors do not repeatedly hit server',async()=>{
+ const r=backend();r.save=async()=>{r.calls++;throw Object.assign(Error('bad key'),{code:'22023'});};
+ const e=make(r);e.schedule=()=>{};e.start();e.storage.setItem(key,'{"value":2}');
+ await assert.rejects(e.flush({automatic:true}));e.nextAutoAt=0;await e.flush({automatic:true});assert.equal(r.calls,1);assert.equal(e.dirty,true);e.close();
+});
+test('automatic sends respect a ten second minimum interval',async()=>{
+ const r=backend(),e=make(r);e.schedule=()=>{};e.start();e.storage.setItem(key,'{"value":2}');await e.flush({automatic:true});
+ e.storage.setItem(key,'{"value":3}');await e.flush({automatic:true});assert.equal(r.calls,1);assert.equal(e.dirty,true);
+ await e.flush({force:true});assert.equal(r.calls,2);assert.equal(e.dirty,false);e.close();
+});
+test('overlapping manual confirmations share the in-flight response',async()=>{
+ const r=backend(),original=r.save.bind(r);let finish;r.save=(p,v)=>new Promise(resolve=>finish=async()=>resolve(await original(p,v)));
+ const e=make(r);e.start();const a=e.flush({force:true}),b=e.flush({force:true});await finish();await Promise.all([a,b]);assert.equal(r.calls,1);e.close();
+});

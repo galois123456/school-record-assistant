@@ -32,6 +32,11 @@ test('PostgreSQL: existing todos survive, ownership RLS and atomic revision chec
   const withGrades={...sample('A2'),storage:{...sample('A2').storage,'school-record-assessment-v1':JSON.stringify({version:2,classes:[{id:'class-test',data:{students:[{id:'student-test',scores:{idone:'25'}}]}}]})}};
   assert.equal((await save(withGrades,2)).rows[0].result.revision,3);
   assert.equal((await db.query('select payload from public.school_record_workspaces')).rows[0].payload.storage['school-record-assessment-v1'],withGrades.storage['school-record-assessment-v1']);
+  const before=(await db.query('select revision,updated_at,payload from public.school_record_workspaces')).rows[0];
+  await db.exec('reset role');await db.exec(readFileSync(new URL('../supabase/upgrade-3.16.sql',import.meta.url),'utf8'));await asUser(A);
+  assert.equal((await save(withGrades,3)).rows[0].result.revision,3);
+  assert.deepEqual((await db.query('select revision,updated_at,payload from public.school_record_workspaces')).rows[0],before);
+  await assert.rejects(save({schemaVersion:1,storage:{'school-record-assessment-v1':'broken JSON'}},3),e=>e.code==='22023'&&e.message.includes('school-record-assessment-v1'));
   await asUser('');await assert.rejects(save(sample('none'),0),e=>e.code==='42501');
   await asUser('','anon');await assert.rejects(db.query('select * from public.school_record_workspaces'),e=>e.code==='42501');await assert.rejects(save(sample('anon'),0),e=>e.code==='42501');
   await db.exec('reset role');assert.equal((await db.query('select title from public.todos')).rows[0].title,'기존 일정 유지');

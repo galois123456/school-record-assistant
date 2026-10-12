@@ -36,10 +36,10 @@ export class AccountStorage {
   close() { this.active = false; this.onChange = () => {}; }
 }
 export class WorkspaceSync {
-  constructor({remote, cache, revision, payload, pending = null, onState = () => {}, delay = 1500, isOnline = () => true}) {
+  constructor({remote, cache, revision, payload, pending = null, onState = () => {}, delay = 5000, isOnline = () => true}) {
     validatePayload(payload);
     this.remote=remote; this.cache=cache; this.revision=revision; this.onState=onState; this.delay=delay;
-    this.isOnline=isOnline;this.confirmedAt=null;
+    this.isOnline=isOnline;this.confirmedAt=null;this.failures=0;this.autoStopped=false;this.nextAutoAt=0;
     this.base=fingerprint(payload); this.paused=true; this.blocked=false; this.closed=false; this.cacheError=false;
     if(pending) {
       validatePayload(pending.payload);
@@ -59,18 +59,26 @@ export class WorkspaceSync {
   }
   changed() {
     this.persist();
-    this.status(this.blocked?'conflict':'pending');
+    this.status(this.blocked?'conflict':this.autoStopped?'error':'pending',this.autoStopped?this.lastError||'자동 재시도가 중단되었습니다. 지금 저장으로 다시 시도하세요.':'');
     clearTimeout(this.timer);
-    if(!this.paused&&!this.blocked&&this.isOnline()) this.timer=setTimeout(()=>this.flush().catch(()=>{}),this.delay);
+    this.schedule();
+  }
+  schedule() {
+    clearTimeout(this.timer);
+    if(this.closed||this.paused||this.blocked||this.autoStopped||!this.isOnline()||!this.dirty)return;
+    this.timer=setTimeout(()=>this.flush({automatic:true}).catch(()=>{}),Math.max(this.delay,this.nextAutoAt-Date.now()));
   }
   start() { this.paused=false; if(this.blocked) this.status('conflict'); else if(this.dirty) this.changed(); else this.status('saved'); }
-  async flush({force=false}={}) {
+  async flush({force=false,automatic=false}={}) {
     clearTimeout(this.timer);
     if(this.closed||this.paused) return;
-    if(this.inflight) { await this.inflight; if((this.dirty||force)&&!this.blocked) return this.flush({force}); return; }
+    if(this.inflight) { await this.inflight; if(this.dirty&&!this.blocked) return this.flush({automatic}); return; }
     if(this.blocked) throw Error('다른 기기의 변경 사항을 먼저 확인하세요.');
     if(!this.isOnline()){if(this.dirty)this.persist();this.status('offline');throw Error('인터넷 연결이 끊겨 서버에 저장하지 못했습니다. 연결 후 다시 저장해 주세요.');}
     if(!this.dirty&&!force) { return; }
+    if(automatic&&(this.autoStopped||Date.now()<this.nextAutoAt)){this.schedule();return;}
+    if(!automatic){this.autoStopped=false;this.failures=0;}
+    this.nextAutoAt=Date.now()+10000;
     this.inflight=this.send();
     try { await this.inflight; } finally { this.inflight=null; }
   }
@@ -81,14 +89,20 @@ export class WorkspaceSync {
       validatePayload(payload);
       const row=await this.remote.save(payload,this.revision);
       if(this.closed) return;
-      this.confirmedAt=Date.now();
+      this.failures=0;this.autoStopped=false;this.confirmedAt=Date.now();
       this.revision=Number(row.revision); this.base=sent;
-      if(this.dirty) { this.persist(); this.status('pending'); }
+      if(this.dirty) { this.persist(); this.status('pending');this.schedule(); }
       else { try { this.cache.remove(); this.cacheError=false; } catch { this.cacheError=true; } this.status('saved'); }
     } catch(error) {
       if(this.closed) throw error;
       if(error.code==='40001') this.blocked=true;
-      this.persist(); this.status(this.blocked?'conflict':'error',error.message); throw error;
+      this.failures++;
+      const permanent=['22023','22P02','42501','PGRST202','PGRST301','42883','42P01'].includes(error.code);
+      this.autoStopped=permanent||this.failures>=4;
+      this.nextAutoAt=Date.now()+[10000,30000,60000][Math.min(this.failures-1,2)];
+      this.lastError=error.message+(this.autoStopped?' 자동 재시도를 중단했습니다. 원인을 확인한 뒤 지금 저장을 눌러 주세요.':'');
+      this.persist(); this.status(this.blocked?'conflict':'error',this.lastError);
+      this.schedule();throw error;
     }
   }
   async replaceRemote(revision) { if(this.inflight) await this.inflight.catch(()=>{}); this.revision=revision; this.blocked=false; this.persist(); await this.flush(); }

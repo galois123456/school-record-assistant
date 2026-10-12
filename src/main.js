@@ -61,7 +61,7 @@ async function openAccount(user){
   }
   $('syncState').textContent='자료를 불러오지 못했습니다';}
 }
-async function saveNow({force=false}={}){flushEditor(true);if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush({force});}
+async function saveNow({force=false,automatic=false}={}){flushEditor(true);if(!engine)throw Error('편집기를 먼저 열어 주세요.');if(engine.paused)throw Error('편집기를 준비 중입니다. 잠시 후 다시 시도하세요.');await engine.flush({force,automatic});}
 const resetSaveFeedback=bindSaveFeedback({button:$('saveBtn'),save:()=>saveNow({force:true}),onError:e=>status({state:engine?.blocked?'conflict':navigator.onLine===false?'offline':'error',detail:explain(e),cacheError:engine?.cacheError})});
 $('reloadBtn').onclick=async()=>{try{await saveNow();const user=currentUser;stop();await openAccount(user);}catch(e){notice(explain(e));}};
 $('logoutBtn').onclick=async()=>{
@@ -75,7 +75,7 @@ $('logoutBtn').onclick=async()=>{
  finally{$('logoutBtn').disabled=false;}
 };
 async function downloadJSON(payload,prefix){const d=new Date(),pad=n=>String(n).padStart(2,'0'),stamp=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;return window.RecordBackup.download(payload,prefix+'_'+stamp+'.json');}
-function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1',assessment:'school-record-assessment-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.15',exportedAt:new Date().toISOString(),...shell,apps};}
+function localBackup(){flushEditor();if(frame?.contentWindow?.getCombinedBackup)return frame.contentWindow.getCombinedBackup();const raw=engine.storage.snapshot().storage;const names={journal:'school-record-student-journal-v1',integrated:'school-record-class-activity-manager-v2',macro:'student-sentence-macro-v1',helper:'student-record-helper-v1',assessment:'school-record-assessment-v1'};const apps=Object.fromEntries(Object.entries(names).map(([name,key])=>[name,raw[key]?JSON.parse(raw[key]):null]));if(Object.values(apps).some(x=>!x))return{app:'school-record-cloud-recovery',...engine.storage.snapshot()};const shell=JSON.parse(raw['school-record-combined-shell-v1']||'{}');return{app:'school-record-combined',schemaVersion:2,version:'3.16',exportedAt:new Date().toISOString(),...shell,apps};}
 $('downloadLocal').onclick=()=>downloadJSON(localBackup(),'생기부_충돌자료백업');
 $('resolveDialog').addEventListener('cancel',e=>e.preventDefault());
 async function resolveConflict(useLocal){
@@ -120,10 +120,9 @@ supabase.auth.onAuthStateChange((event,session)=>{
   openAccount(session.user);
  },0);
 });
-window.addEventListener('online',()=>{if(engine&&!engine.blocked)saveNow({force:true}).catch(()=>{});});
+window.addEventListener('online',()=>{if(engine&&!engine.blocked)saveNow({force:true,automatic:true}).catch(()=>{});});
 window.addEventListener('offline',()=>{if(engine)engine.connectionLost();else notice('인터넷 연결이 끊겼습니다. 연결 후 다시 시도하세요.');});
 window.addEventListener('beforeunload',e=>{flushEditor();if(engine?.dirty){e.preventDefault();e.returnValue='';}});
 window.addEventListener('pagehide',()=>{flushEditor();if(engine?.dirty)engine.persist();});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){flushEditor();engine?.flush().catch(()=>{});}else if(engine&&!engine.blocked)saveNow().catch(()=>{});});
-// Reattempt after transient failures. CAS still prevents overwriting newer devices.
-setInterval(()=>{if(engine?.dirty&&!engine.blocked&&!engine.paused&&navigator.onLine)engine.flush().catch(()=>{});},15000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){flushEditor();engine?.flush({automatic:true}).catch(()=>{});}else if(engine&&!engine.blocked)saveNow({automatic:true}).catch(()=>{});});
+// Bounded retries and backoff are owned by WorkspaceSync; no background retry interval.
