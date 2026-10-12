@@ -41,7 +41,7 @@ begin
     if v_item.key not in (
       'school-record-combined-shell-v1','school-record-student-journal-v1',
       'school-record-class-activity-manager-v2','student-sentence-macro-v1',
-      'student-record-helper-v1','school-record-byte-manager-v1','school-record-byte-manager-v2'
+      'student-record-helper-v1','school-record-assessment-v1','school-record-byte-manager-v1','school-record-byte-manager-v2'
     ) or jsonb_typeof(v_item.value) <> 'string' then
       raise exception 'Invalid workspace storage key/value' using errcode='22023';
     end if;

@@ -16,7 +16,7 @@ test('PostgreSQL: existing todos survive, ownership RLS and atomic revision chec
    create table public.todos(id int primary key, title text);
    insert into public.todos values(1,'기존 일정 유지');`);
   const schema=readFileSync(new URL('../supabase/schema.sql',import.meta.url),'utf8');
-  await db.exec(schema);await db.exec(schema); // repeatable, no app data destruction
+  await db.exec(schema.replace("'school-record-assessment-v1',",''));await db.exec(readFileSync(new URL('../supabase/upgrade-3.13.sql',import.meta.url),'utf8'));await db.exec(schema); // repeatable, no app data destruction
   async function asUser(id,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
   const save=(p,r)=>db.query('select public.school_record_save_workspace($1::jsonb,$2::bigint) as result',[JSON.stringify(p),r]);
   await asUser(A);assert.equal((await save(sample('A'),0)).rows[0].result.revision,1);
@@ -29,6 +29,9 @@ test('PostgreSQL: existing todos survive, ownership RLS and atomic revision chec
   assert.equal((await save(sample('A2'),1)).rows[0].result.revision,2); // lost response retry
   await assert.rejects(save({schemaVersion:1,storage:{'sb-auth':'{}'}},2),e=>e.code==='22023');
   await assert.rejects(save({schemaVersion:1,storage:{'school-record-student-journal-v1':'null'}},2),e=>e.code==='22023');
+  const withGrades={...sample('A2'),storage:{...sample('A2').storage,'school-record-assessment-v1':JSON.stringify({version:2,classes:[{id:'class-test',data:{students:[{id:'student-test',scores:{idone:'25'}}]}}]})}};
+  assert.equal((await save(withGrades,2)).rows[0].result.revision,3);
+  assert.equal((await db.query('select payload from public.school_record_workspaces')).rows[0].payload.storage['school-record-assessment-v1'],withGrades.storage['school-record-assessment-v1']);
   await asUser('');await assert.rejects(save(sample('none'),0),e=>e.code==='42501');
   await asUser('','anon');await assert.rejects(db.query('select * from public.school_record_workspaces'),e=>e.code==='42501');await assert.rejects(save(sample('anon'),0),e=>e.code==='42501');
   await db.exec('reset role');assert.equal((await db.query('select title from public.todos')).rows[0].title,'기존 일정 유지');

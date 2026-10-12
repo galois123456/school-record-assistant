@@ -2,7 +2,7 @@
 export const APP_KEYS = Object.freeze([
   'school-record-combined-shell-v1', 'school-record-student-journal-v1',
   'school-record-class-activity-manager-v2', 'student-sentence-macro-v1',
-  'student-record-helper-v1', 'school-record-byte-manager-v1', 'school-record-byte-manager-v2'
+  'student-record-helper-v1','school-record-assessment-v1', 'school-record-byte-manager-v1', 'school-record-byte-manager-v2'
 ]);
 export function validatePayload(payload) {
   if (!payload || payload.schemaVersion !== 1 || !payload.storage || Array.isArray(payload.storage) || typeof payload.storage !== 'object') throw Error('지원하지 않는 서버 자료 형식입니다.');

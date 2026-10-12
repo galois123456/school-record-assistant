@@ -1,0 +1,23 @@
+생기부 작성 도우미 웹 ver3.12 · 빠른 배포 순서
+
+1. 기존 todolist의 Supabase 프로젝트를 엽니다.
+2. SQL Editor에서 supabase/schema.sql 전체를 실행합니다.
+3. 이 폴더 안의 내용을 새 GitHub 저장소에 올립니다.
+   package.json이 저장소 루트에 있어야 합니다.
+4. Vercel → Add New → Project에서 저장소를 가져옵니다.
+   Framework: Other / Build: npm run build / Output: dist
+5. 환경변수 두 개를 넣습니다. 기존 todolist 프로젝트의 값입니다.
+   PUBLIC_SUPABASE_URL = 프로젝트 URL
+   PUBLIC_SUPABASE_ANON_KEY = publishable 또는 anon 공개 키
+6. Deploy 후 새 생기부 사이트 주소를 복사합니다.
+7. Supabase → Authentication → URL Configuration:
+   기존 Site URL은 유지합니다.
+   Redirect URLs에 새 사이트 주소를 끝의 /까지 추가합니다.
+8. 기존 todolist 이메일·비밀번호로 로그인합니다.
+9. 기존 HTML의 통합 백업 파일을 통합 복원으로 불러옵니다.
+10. ‘지금 저장’ → ‘서버 저장 완료’ 후 다른 기기에서도 확인합니다.
+
+새 Supabase 프로젝트를 만들 필요가 없습니다.
+기존 todolist 저장소나 데이터는 덮어쓰지 않습니다.
+같은 계정이지만 두 사이트에서 처음에는 각각 로그인합니다.
+상세 안내와 문제 해결은 README.md를 확인하세요.

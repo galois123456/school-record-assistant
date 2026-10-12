@@ -76,3 +76,5 @@ test('forced verification preserves revision conflict protection',async()=>{
  const r=backend(),e=make(r);e.start();r.revision++;r.data=payload('another device');
  await assert.rejects(e.flush({force:true}),/conflict/);assert.equal(e.blocked,true);assert.equal(r.data.storage[key],payload('another device').storage[key]);e.close();
 });
+
+test('assessment scores survive isolated account storage roundtrip',()=>{const key='school-record-assessment-v1';const value=JSON.stringify({version:2,classes:[{id:'class-a',data:{students:[{id:'student-a',scores:{idone:'25'}}]}}]});const storage=new AccountStorage(emptyPayload(),()=>{});storage.setItem(key,value);const restored=new AccountStorage(validatePayload(storage.snapshot()),()=>{});assert.equal(restored.getItem(key),value);storage.close();restored.close();});

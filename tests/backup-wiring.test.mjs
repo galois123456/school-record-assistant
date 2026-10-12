@@ -7,7 +7,7 @@ test('combined restore requires successful encrypted safety backup before mutati
  const line=editor.split('\n').find(l=>l.startsWith("document.getElementById('combinedFile').onchange="));
  for(const outcome of ['cancel','failure','success']){
   const input={},messages=[];let applied=0,backupCalls=0;
-  const ctx={document:{getElementById:()=>input},RecordBackup:{read:async()=>{if(outcome==='failure')throw Error('wrong password');return {apps:{}};}},validateCombined:x=>x,confirm:()=>true,getCombinedBackup:()=>({before:true}),downloadCombined:async()=>{backupCalls++;return outcome==='success';},applyCombined:()=>applied++,shellToast:t=>messages.push(t)};
+  const ctx={document:{getElementById:()=>input},RecordBackup:{read:async()=>{if(outcome==='failure')throw Error('wrong password');return {app:'school-record-combined',apps:{}};}},validateCombined:x=>x,confirm:()=>true,getCombinedBackup:()=>({before:true}),downloadCombined:async()=>{backupCalls++;return outcome==='success';},applyCombined:()=>applied++,shellToast:t=>messages.push(t)};
   vm.runInNewContext(line,ctx);const e={target:{files:[{text:async()=>'{"encrypted":"fixture"}'}],value:'file.json'}};
   await input.onchange(e);assert.equal(applied,outcome==='success'?1:0);assert.equal(backupCalls,outcome==='failure'?0:1);assert.equal(e.target.value,'');
  }
@@ -19,7 +19,7 @@ test('cancelled safety backup aborts reset',async()=>{
  vm.runInNewContext(editor.slice(start,end),ctx);await node('resetAllRecords').onclick();assert.equal(mutations,0);
 });
 test('all embedded JSON download and restore paths route through the encryption interface',()=>{
- for(const name of ['journal','integrated','macro','helper']){
+ for(const name of ['journal','integrated','macro','helper','assessment']){
   const inner=Buffer.from(editor.match(new RegExp(name+":'([A-Za-z0-9+/=]+)'"))[1],'base64').toString();
   assert.match(inner,/return parent\.RecordBackup\.download\(JSON\.parse\(/,name);
   assert.match(inner,/await parent\.RecordBackup\.read\(/,name);
