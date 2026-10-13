@@ -93,12 +93,40 @@ test('invalid SQL payload errors do not repeatedly hit server',async()=>{
  const e=make(r);e.schedule=()=>{};e.start();e.storage.setItem(key,'{"value":2}');
  await assert.rejects(e.flush({automatic:true}));e.nextAutoAt=0;await e.flush({automatic:true});assert.equal(r.calls,1);assert.equal(e.dirty,true);e.close();
 });
-test('automatic sends respect a ten second minimum interval',async()=>{
+test('changed data bypasses the ten second unchanged-confirmation interval',async()=>{
  const r=backend(),e=make(r);e.schedule=()=>{};e.start();e.storage.setItem(key,'{"value":2}');await e.flush({automatic:true});
- e.storage.setItem(key,'{"value":3}');await e.flush({automatic:true});assert.equal(r.calls,1);assert.equal(e.dirty,true);
- await e.flush({force:true});assert.equal(r.calls,2);assert.equal(e.dirty,false);e.close();
+ e.storage.setItem(key,'{"value":3}');await e.flush({automatic:true});assert.equal(r.calls,2);assert.equal(e.dirty,false);
+ await e.flush({force:true,automatic:true});assert.equal(r.calls,2);assert.equal(e.dirty,false);e.close();
 });
 test('overlapping manual confirmations share the in-flight response',async()=>{
  const r=backend(),original=r.save.bind(r);let finish;r.save=(p,v)=>new Promise(resolve=>finish=async()=>resolve(await original(p,v)));
  const e=make(r);e.start();const a=e.flush({force:true}),b=e.flush({force:true});await finish();await Promise.all([a,b]);assert.equal(r.calls,1);e.close();
+});
+
+// Fake clock verifies debounce and exact retry deadlines without waiting real minutes.
+test('three second debounce restarts on input and retries are not postponed by new input',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout','Date'],now:100000});
+ const r=backend(),e=new WorkspaceSync({remote:r,cache:cache(),revision:1,payload:r.data});
+ const settle=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
+ e.start();e.storage.setItem(key,'{"value":2}');t.mock.timers.tick(2999);await settle();assert.equal(r.calls,0);
+ e.storage.setItem(key,'{"value":3}');t.mock.timers.tick(2999);await settle();assert.equal(r.calls,0);
+ t.mock.timers.tick(1);await settle();assert.equal(r.calls,1);assert.equal(e.dirty,false);
+ r.save=async()=>{r.calls++;throw Error('network');};
+ e.storage.setItem(key,'{"value":4}');t.mock.timers.tick(3000);await settle();assert.equal(r.calls,2);
+ for(const [i,wait] of [10000,30000,60000].entries()){
+  t.mock.timers.tick(wait-1);await settle();assert.equal(r.calls,2+i);
+  e.storage.setItem(key,JSON.stringify({value:10+i}));
+  t.mock.timers.tick(1);await settle();assert.equal(r.calls,3+i);
+ }
+ assert.equal(e.autoStopped,true);e.storage.setItem(key,'{"value":99}');t.mock.timers.tick(120000);await settle();assert.equal(r.calls,5);assert.equal(e.cache.value.payload.storage[key],'{"value":99}');e.close();
+});
+test('in-flight edits are coalesced and wait only for remaining debounce',async(t)=>{
+ t.mock.timers.enable({apis:['setTimeout','Date'],now:100000});
+ const r=backend(),original=r.save.bind(r);let finish,requests=0;
+ r.save=(p,v)=>{requests++;return new Promise(resolve=>finish=async()=>resolve(await original(p,v)));};
+ const e=new WorkspaceSync({remote:r,cache:cache(),revision:1,payload:r.data});const settle=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
+ e.start();e.storage.setItem(key,'{"value":2}');t.mock.timers.tick(3000);await settle();assert.equal(requests,1);
+ e.storage.setItem(key,'{"value":3}');e.storage.setItem(key,'{"value":4}');t.mock.timers.tick(2000);await settle();assert.equal(requests,1);
+ await finish();await settle();t.mock.timers.tick(999);await settle();assert.equal(requests,1);
+ t.mock.timers.tick(1);await settle();assert.equal(requests,2);await finish();await settle();assert.equal(r.data.storage[key],'{"value":4}');assert.equal(e.dirty,false);e.close();
 });

@@ -16,7 +16,7 @@ test('PostgreSQL: existing todos survive, ownership RLS and atomic revision chec
    create table public.todos(id int primary key, title text);
    insert into public.todos values(1,'기존 일정 유지');`);
   const schema=readFileSync(new URL('../supabase/schema.sql',import.meta.url),'utf8');
-  await db.exec(schema.replace("'school-record-assessment-v1',",''));await db.exec(readFileSync(new URL('../supabase/upgrade-3.13.sql',import.meta.url),'utf8'));await db.exec(schema); // repeatable, no app data destruction
+  await db.exec(schema.replace("'school-record-assessment-v1',",''));await db.exec(readFileSync(new URL('../supabase/upgrade-3.16.sql',import.meta.url),'utf8'));await db.exec(schema); // repeatable, no app data destruction
   async function asUser(id,role='authenticated'){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec(`set role ${role}`);}
   const save=(p,r)=>db.query('select public.school_record_save_workspace($1::jsonb,$2::bigint) as result',[JSON.stringify(p),r]);
   await asUser(A);assert.equal((await save(sample('A'),0)).rows[0].result.revision,1);

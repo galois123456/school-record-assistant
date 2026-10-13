@@ -36,10 +36,10 @@ export class AccountStorage {
   close() { this.active = false; this.onChange = () => {}; }
 }
 export class WorkspaceSync {
-  constructor({remote, cache, revision, payload, pending = null, onState = () => {}, delay = 5000, isOnline = () => true}) {
+  constructor({remote, cache, revision, payload, pending = null, onState = () => {}, delay = 3000, isOnline = () => true}) {
     validatePayload(payload);
     this.remote=remote; this.cache=cache; this.revision=revision; this.onState=onState; this.delay=delay;
-    this.isOnline=isOnline;this.confirmedAt=null;this.failures=0;this.autoStopped=false;this.nextAutoAt=0;
+    this.isOnline=isOnline;this.confirmedAt=null;this.failures=0;this.autoStopped=false;this.nextAutoAt=0;this.changedAt=0;
     this.base=fingerprint(payload); this.paused=true; this.blocked=false; this.closed=false; this.cacheError=false;
     if(pending) {
       validatePayload(pending.payload);
@@ -58,6 +58,7 @@ export class WorkspaceSync {
     catch { this.cacheError=true; }
   }
   changed() {
+    this.changedAt=Date.now();
     this.persist();
     this.status(this.blocked?'conflict':this.autoStopped?'error':'pending',this.autoStopped?this.lastError||'자동 재시도가 중단되었습니다. 지금 저장으로 다시 시도하세요.':'');
     clearTimeout(this.timer);
@@ -65,8 +66,8 @@ export class WorkspaceSync {
   }
   schedule() {
     clearTimeout(this.timer);
-    if(this.closed||this.paused||this.blocked||this.autoStopped||!this.isOnline()||!this.dirty)return;
-    this.timer=setTimeout(()=>this.flush({automatic:true}).catch(()=>{}),Math.max(this.delay,this.nextAutoAt-Date.now()));
+    if(this.closed||this.paused||this.blocked||this.autoStopped||this.inflight||!this.isOnline()||!this.dirty)return;
+    this.timer=setTimeout(()=>this.flush({automatic:true}).catch(()=>{}),Math.max(0,this.failures?this.nextAutoAt-Date.now():this.changedAt+this.delay-Date.now()));
   }
   start() { this.paused=false; if(this.blocked) this.status('conflict'); else if(this.dirty) this.changed(); else this.status('saved'); }
   async flush({force=false,automatic=false}={}) {
@@ -76,11 +77,11 @@ export class WorkspaceSync {
     if(this.blocked) throw Error('다른 기기의 변경 사항을 먼저 확인하세요.');
     if(!this.isOnline()){if(this.dirty)this.persist();this.status('offline');throw Error('인터넷 연결이 끊겨 서버에 저장하지 못했습니다. 연결 후 다시 저장해 주세요.');}
     if(!this.dirty&&!force) { return; }
-    if(automatic&&(this.autoStopped||Date.now()<this.nextAutoAt)){this.schedule();return;}
+    if(automatic&&(this.autoStopped||(Date.now()<this.nextAutoAt&&(this.failures>0||!this.dirty)))){this.schedule();return;}
     if(!automatic){this.autoStopped=false;this.failures=0;}
     this.nextAutoAt=Date.now()+10000;
     this.inflight=this.send();
-    try { await this.inflight; } finally { this.inflight=null; }
+    try { await this.inflight; } finally { this.inflight=null; this.schedule(); }
   }
   async send() {
     const payload=this.storage.snapshot(), sent=fingerprint(payload);
